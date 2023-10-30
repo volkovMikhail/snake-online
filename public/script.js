@@ -35,10 +35,10 @@ function randomX() {
 }
 
 function randomY() {
-  Math.round(Math.floor((Math.random() * canv.height) / snakeSize) * snakeSize);
+  return Math.round(
+    Math.floor((Math.random() * canv.height) / snakeSize) * snakeSize
+  );
 }
-
-const clientSnake = new Snake(25, 25, snakeColor); //TODO: init with data from server
 
 class Chunk {
   constructor(x, y) {
@@ -55,24 +55,30 @@ class Fruit {
   constructor(startX, startY, fruitColor) {
     this.chunk = new Chunk(startX, startY);
 
+    this.x = startX;
+    this.y = startY;
+
     this.color = fruitColor;
   }
 
   changePosition(x, y) {
-    this.chunk.x = x;
+    this.x = x;
+    this.y = y;
 
-    this.chunk.y = y;
+    this.chunk = new Chunk(x, y);
   }
 
   draw() {
-    ctx.fillStyle = color;
+    ctx.fillStyle = this.color;
 
     this.chunk.Draw();
   }
 }
 
 class Snake {
-  constructor(startX, startY, color) {
+  constructor(startX, startY, color, fruit) {
+    this.fruit = fruit;
+
     this.body = [new Chunk(startX, startY)];
 
     this.color = color;
@@ -83,52 +89,54 @@ class Snake {
       ArrowRight: false,
       ArrowLeft: false
     };
+
+    this.head = this.body[this.body.length - 1];
   }
 
-  head = this.body[this.body - 1];
-
   draw() {
-    ctx.fillStyle = color;
+    ctx.fillStyle = this.color;
 
-    for (const chunk of body) {
+    for (const chunk of this.body) {
       chunk.Draw();
     }
   }
 
   toggleDirection(newDirection) {
-    for (const key in direction) {
-      direction[key] = key === newDirection;
+    for (const key in this.direction) {
+      this.direction[key] = key === newDirection;
     }
   }
 
   move() {
-    head = Snake[Snake.length - 1];
+    this.head = this.body[this.body.length - 1];
 
-    if (direction.ArrowUp) {
-      Snake.push(new Chunk(head.x, head.y - snakeSize));
-      Snake.splice(0, 1);
+    if (this.direction.ArrowUp) {
+      this.body.push(new Chunk(this.head.x, this.head.y - snakeSize));
+      this.body.splice(0, 1);
     }
 
-    if (direction.ArrowDown) {
-      Snake.push(new Chunk(head.x, head.y + snakeSize));
-      Snake.splice(0, 1);
+    if (this.direction.ArrowDown) {
+      this.body.push(new Chunk(this.head.x, this.head.y + snakeSize));
+      this.body.splice(0, 1);
     }
 
-    if (direction.ArrowRight) {
-      Snake.push(new Chunk(head.x + snakeSize, head.y));
-      Snake.splice(0, 1);
+    if (this.direction.ArrowRight) {
+      this.body.push(new Chunk(this.head.x + snakeSize, this.head.y));
+      this.body.splice(0, 1);
     }
 
-    if (direction.ArrowLeft) {
-      Snake.push(new Chunk(head.x - snakeSize, head.y));
-      Snake.splice(0, 1);
+    if (this.direction.ArrowLeft) {
+      this.body.push(new Chunk(this.head.x - snakeSize, this.head.y));
+      this.body.splice(0, 1);
     }
 
-    const newHead = Snake[Snake.length - 1];
+    //TODO: need to move this logic to main function
+    const newHead = this.body[this.body.length - 1];
 
-    if (newHead.x === Fruit.x && newHead.y === Fruit.y) {
-      Snake.push(new Chunk(newHead.x, newHead.y));
-      drawNewFruit();
+    if (newHead.x === this.fruit.x && newHead.y === this.fruit.y) {
+      this.body.push(new Chunk(newHead.x, newHead.y));
+
+      this.fruit.changePosition(randomX(), randomY());
     }
 
     if (newHead.x >= canv.width) newHead.x = 0;
@@ -136,17 +144,14 @@ class Snake {
     if (newHead.x < 0) newHead.x = canv.width;
     if (newHead.y < 0) newHead.y = canv.height;
 
-    for (let i = 0; i < Snake.length - 2; i++) {
-      if (Snake[i].x === newHead.x && Snake[i].y === newHead.y) {
-        Snake = [new Chunk(0, 0)];
+    //game over
+    for (let i = 0; i < this.body.length - 2; i++) {
+      if (this.body[i].x === newHead.x && this.body[i].y === newHead.y) {
+        this.body = [new Chunk(0, 0)];
       }
     }
-
-    this.head = newHead;
   }
 }
-
-let fruit = new Fruit(100, 100);
 
 function clear() {
   ctx.fillStyle = bgColor;
@@ -154,10 +159,12 @@ function clear() {
 }
 
 class Controls {
-  constructor() {
+  constructor(clientSnake) {
+    this.clientSnake = clientSnake;
+
     this.prevKey = null;
 
-    window.addEventListener('keydown', this.keyPressed);
+    window.addEventListener('keydown', this.keyPressed.bind(this));
   }
 
   keyPressed(e) {
@@ -166,34 +173,51 @@ class Controls {
       this.prevKey != 'ArrowDown' &&
       e.code != this.prevKey
     ) {
-      toggleDirection(e.code);
+      this.clientSnake.toggleDirection(e.code);
     }
     if (
       e.code === 'ArrowDown' &&
       this.prevKey != 'ArrowUp' &&
       e.code != this.prevKey
     ) {
-      toggleDirection(e.code);
+      this.clientSnake.toggleDirection(e.code);
     }
     if (
       e.code === 'ArrowRight' &&
       this.prevKey != 'ArrowLeft' &&
       e.code != this.prevKey
     ) {
-      toggleDirection(e.code);
+      this.clientSnake.toggleDirection(e.code);
     }
     if (
       e.code === 'ArrowLeft' &&
       this.prevKey != 'ArrowRight' &&
       e.code != this.prevKey
     ) {
-      toggleDirection(e.code);
+      this.clientSnake.toggleDirection(e.code);
     }
 
     this.prevKey = e.code;
   }
 }
 
-function main() {}
+function start() {
+  const fruit = new Fruit(100, 100, fruitColor);
+  fruit.draw();
 
-setInterval(main, delay);
+  const clientSnake = new Snake(25, 25, snakeColor, fruit);
+
+  const controls = new Controls(clientSnake);
+
+  function main() {
+    clear();
+
+    fruit.draw();
+    clientSnake.move();
+    clientSnake.draw();
+  }
+
+  setInterval(main, delay);
+}
+
+start();
