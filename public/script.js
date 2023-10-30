@@ -28,21 +28,17 @@ const bgColor = window
   .getComputedStyle(document.body, null)
   .getPropertyValue('background-color');
 
-Snake = [];
-let Fruit;
+function randomX() {
+  return Math.round(
+    Math.floor((Math.random() * canv.width) / snakeSize) * snakeSize
+  );
+}
 
-let direction = {
-  ArrowUp: false,
-  ArrowDown: false,
-  ArrowRight: false,
-  ArrowLeft: false
-};
+function randomY() {
+  Math.round(Math.floor((Math.random() * canv.height) / snakeSize) * snakeSize);
+}
 
-const toggleDirection = (d) => {
-  for (const key in direction) {
-    direction[key] = key === d;
-  }
-};
+const clientSnake = new Snake(25, 25, snakeColor); //TODO: init with data from server
 
 class Chunk {
   constructor(x, y) {
@@ -55,99 +51,149 @@ class Chunk {
   }
 }
 
-function drawSnake() {
-  clear();
-  ctx.fillStyle = snakeColor;
-  for (let i = 0; i < Snake.length; i++) {
-    Snake[i].Draw();
+class Fruit {
+  constructor(startX, startY, fruitColor) {
+    this.chunk = new Chunk(startX, startY);
+
+    this.color = fruitColor;
+  }
+
+  changePosition(x, y) {
+    this.chunk.x = x;
+
+    this.chunk.y = y;
+  }
+
+  draw() {
+    ctx.fillStyle = color;
+
+    this.chunk.Draw();
   }
 }
+
+class Snake {
+  constructor(startX, startY, color) {
+    this.body = [new Chunk(startX, startY)];
+
+    this.color = color;
+
+    this.direction = {
+      ArrowUp: false,
+      ArrowDown: false,
+      ArrowRight: false,
+      ArrowLeft: false
+    };
+  }
+
+  head = this.body[this.body - 1];
+
+  draw() {
+    ctx.fillStyle = color;
+
+    for (const chunk of body) {
+      chunk.Draw();
+    }
+  }
+
+  toggleDirection(newDirection) {
+    for (const key in direction) {
+      direction[key] = key === newDirection;
+    }
+  }
+
+  move() {
+    head = Snake[Snake.length - 1];
+
+    if (direction.ArrowUp) {
+      Snake.push(new Chunk(head.x, head.y - snakeSize));
+      Snake.splice(0, 1);
+    }
+
+    if (direction.ArrowDown) {
+      Snake.push(new Chunk(head.x, head.y + snakeSize));
+      Snake.splice(0, 1);
+    }
+
+    if (direction.ArrowRight) {
+      Snake.push(new Chunk(head.x + snakeSize, head.y));
+      Snake.splice(0, 1);
+    }
+
+    if (direction.ArrowLeft) {
+      Snake.push(new Chunk(head.x - snakeSize, head.y));
+      Snake.splice(0, 1);
+    }
+
+    const newHead = Snake[Snake.length - 1];
+
+    if (newHead.x === Fruit.x && newHead.y === Fruit.y) {
+      Snake.push(new Chunk(newHead.x, newHead.y));
+      drawNewFruit();
+    }
+
+    if (newHead.x >= canv.width) newHead.x = 0;
+    if (newHead.y >= canv.height) newHead.y = 0;
+    if (newHead.x < 0) newHead.x = canv.width;
+    if (newHead.y < 0) newHead.y = canv.height;
+
+    for (let i = 0; i < Snake.length - 2; i++) {
+      if (Snake[i].x === newHead.x && Snake[i].y === newHead.y) {
+        Snake = [new Chunk(0, 0)];
+      }
+    }
+
+    this.head = newHead;
+  }
+}
+
+let fruit = new Fruit(100, 100);
 
 function clear() {
   ctx.fillStyle = bgColor;
   ctx.fillRect(0, 0, canv.width, canv.height);
 }
 
-let prevKey;
+class Controls {
+  constructor() {
+    this.prevKey = null;
 
-window.addEventListener('keydown', (e) => {
-  if (e.code === 'ArrowUp' && prevKey != 'ArrowDown' && e.code != prevKey) {
-    toggleDirection(e.code);
-  }
-  if (e.code === 'ArrowDown' && prevKey != 'ArrowUp' && e.code != prevKey) {
-    toggleDirection(e.code);
-  }
-  if (e.code === 'ArrowRight' && prevKey != 'ArrowLeft' && e.code != prevKey) {
-    toggleDirection(e.code);
-  }
-  if (e.code === 'ArrowLeft' && prevKey != 'ArrowRight' && e.code != prevKey) {
-    toggleDirection(e.code);
+    window.addEventListener('keydown', this.keyPressed);
   }
 
-  prevKey = e.code;
-});
-
-function drawNewFruit() {
-  Fruit.x = Math.round(
-    Math.floor((Math.random() * canv.width) / snakeSize) * snakeSize
-  );
-  Fruit.y = Math.round(
-    Math.floor((Math.random() * canv.height) / snakeSize) * snakeSize
-  );
-  ctx.fillRect(Fruit.x, Fruit.y, snakeSize, snakeSize);
-}
-
-Snake.push(new Chunk(25, 25));
-Fruit = new Chunk(0, 0);
-
-let head = Snake[Snake.length - 1];
-
-function main() {
-  head = Snake[Snake.length - 1];
-
-  if (direction.ArrowUp) {
-    Snake.push(new Chunk(head.x, head.y - snakeSize));
-    Snake.splice(0, 1);
-  }
-
-  if (direction.ArrowDown) {
-    Snake.push(new Chunk(head.x, head.y + snakeSize));
-    Snake.splice(0, 1);
-  }
-
-  if (direction.ArrowRight) {
-    Snake.push(new Chunk(head.x + snakeSize, head.y));
-    Snake.splice(0, 1);
-  }
-
-  if (direction.ArrowLeft) {
-    Snake.push(new Chunk(head.x - snakeSize, head.y));
-    Snake.splice(0, 1);
-  }
-
-  newHead = Snake[Snake.length - 1];
-
-  if (newHead.x === Fruit.x && newHead.y === Fruit.y) {
-    Snake.push(new Chunk(newHead.x, newHead.y));
-    drawNewFruit();
-  }
-
-  if (newHead.x >= canv.width) newHead.x = 0;
-  if (newHead.y >= canv.height) newHead.y = 0;
-  if (newHead.x < 0) newHead.x = canv.width;
-  if (newHead.y < 0) newHead.y = canv.height;
-
-  for (let i = 0; i < Snake.length - 2; i++) {
-    if (Snake[i].x === newHead.x && Snake[i].y === newHead.y) {
-      Snake = [new Chunk(0, 0)];
+  keyPressed(e) {
+    if (
+      e.code === 'ArrowUp' &&
+      this.prevKey != 'ArrowDown' &&
+      e.code != this.prevKey
+    ) {
+      toggleDirection(e.code);
     }
-  }
+    if (
+      e.code === 'ArrowDown' &&
+      this.prevKey != 'ArrowUp' &&
+      e.code != this.prevKey
+    ) {
+      toggleDirection(e.code);
+    }
+    if (
+      e.code === 'ArrowRight' &&
+      this.prevKey != 'ArrowLeft' &&
+      e.code != this.prevKey
+    ) {
+      toggleDirection(e.code);
+    }
+    if (
+      e.code === 'ArrowLeft' &&
+      this.prevKey != 'ArrowRight' &&
+      e.code != this.prevKey
+    ) {
+      toggleDirection(e.code);
+    }
 
-  drawSnake();
-  ctx.fillStyle = fruitColor;
-  Fruit.Draw();
+    this.prevKey = e.code;
+  }
 }
 
-ctx.fillStyle = fruitColor;
-drawNewFruit();
+function main() {}
+
 setInterval(main, delay);
