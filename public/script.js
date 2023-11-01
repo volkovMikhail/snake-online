@@ -21,8 +21,8 @@ let delay = 100;
 let canv = document.getElementById('canvas');
 let ctx = canv.getContext('2d');
 
-canv.width = Math.floor(window.innerWidth / snakeSize) * snakeSize;
-canv.height = Math.floor(window.innerHeight / snakeSize) * snakeSize;
+canv.width = 800;
+canv.height = 800;
 
 const bgColor = window
   .getComputedStyle(document.body, null)
