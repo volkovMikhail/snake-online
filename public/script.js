@@ -76,9 +76,7 @@ class Fruit {
 }
 
 class Snake {
-  constructor(startX, startY, color, fruit) {
-    this.fruit = fruit;
-
+  constructor(startX, startY, color) {
     this.body = [new Chunk(startX, startY)];
 
     this.color = color;
@@ -107,7 +105,7 @@ class Snake {
     }
   }
 
-  move() {
+  move(gameOverCallback) {
     this.head = this.body[this.body.length - 1];
 
     if (this.direction.ArrowUp) {
@@ -130,24 +128,17 @@ class Snake {
       this.body.splice(0, 1);
     }
 
-    //TODO: need to move this logic to main function
-    const newHead = this.body[this.body.length - 1];
+    this.head = this.body[this.body.length - 1];
 
-    if (newHead.x === this.fruit.x && newHead.y === this.fruit.y) {
-      this.body.push(new Chunk(newHead.x, newHead.y));
-
-      this.fruit.changePosition(randomX(), randomY());
-    }
-
-    if (newHead.x >= canv.width) newHead.x = 0;
-    if (newHead.y >= canv.height) newHead.y = 0;
-    if (newHead.x < 0) newHead.x = canv.width;
-    if (newHead.y < 0) newHead.y = canv.height;
+    if (this.head.x >= canv.width) this.head.x = 0;
+    if (this.head.y >= canv.height) this.head.y = 0;
+    if (this.head.x < 0) this.head.x = canv.width;
+    if (this.head.y < 0) this.head.y = canv.height;
 
     //game over
     for (let i = 0; i < this.body.length - 2; i++) {
-      if (this.body[i].x === newHead.x && this.body[i].y === newHead.y) {
-        this.body = [new Chunk(0, 0)];
+      if (this.body[i].x === this.head.x && this.body[i].y === this.head.y) {
+        gameOverCallback();
       }
     }
   }
@@ -205,7 +196,7 @@ function start() {
   const fruit = new Fruit(100, 100, fruitColor);
   fruit.draw();
 
-  const clientSnake = new Snake(25, 25, snakeColor, fruit);
+  const clientSnake = new Snake(25, 25, snakeColor);
 
   const controls = new Controls(clientSnake);
 
@@ -213,7 +204,14 @@ function start() {
     clear();
 
     fruit.draw();
-    clientSnake.move();
+    clientSnake.move(()=> clientSnake.body = [new Chunk(25,25)]);
+
+    if (clientSnake.head.x === fruit.x && clientSnake.head.y === fruit.y) {
+      clientSnake.body.push(new Chunk(clientSnake.head.x, clientSnake.head.y));
+
+      fruit.changePosition(randomX(), randomY());
+    }
+
     clientSnake.draw();
   }
 
