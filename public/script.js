@@ -40,6 +40,54 @@ function randomY() {
   );
 }
 
+function clear() {
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, canv.width, canv.height);
+}
+
+class Controls {
+  constructor(clientSnake) {
+    this.clientSnake = clientSnake;
+
+    this.prevKey = null;
+
+    window.addEventListener('keydown', this.keyPressed.bind(this));
+  }
+
+  keyPressed(e) {
+    if (
+      e.code === 'ArrowUp' &&
+      this.prevKey != 'ArrowDown' &&
+      e.code != this.prevKey
+    ) {
+      this.clientSnake.toggleDirection(e.code);
+    }
+    if (
+      e.code === 'ArrowDown' &&
+      this.prevKey != 'ArrowUp' &&
+      e.code != this.prevKey
+    ) {
+      this.clientSnake.toggleDirection(e.code);
+    }
+    if (
+      e.code === 'ArrowRight' &&
+      this.prevKey != 'ArrowLeft' &&
+      e.code != this.prevKey
+    ) {
+      this.clientSnake.toggleDirection(e.code);
+    }
+    if (
+      e.code === 'ArrowLeft' &&
+      this.prevKey != 'ArrowRight' &&
+      e.code != this.prevKey
+    ) {
+      this.clientSnake.toggleDirection(e.code);
+    }
+
+    this.prevKey = e.code;
+  }
+}
+
 class Chunk {
   constructor(x, y) {
     this.x = x;
@@ -141,54 +189,6 @@ class Snake {
         gameOverCallback();
       }
     }
-  }
-}
-
-function clear() {
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, canv.width, canv.height);
-}
-
-class Controls {
-  constructor(clientSnake) {
-    this.clientSnake = clientSnake;
-
-    this.prevKey = null;
-
-    window.addEventListener('keydown', this.keyPressed.bind(this));
-  }
-
-  keyPressed(e) {
-    if (
-      e.code === 'ArrowUp' &&
-      this.prevKey != 'ArrowDown' &&
-      e.code != this.prevKey
-    ) {
-      this.clientSnake.toggleDirection(e.code);
-    }
-    if (
-      e.code === 'ArrowDown' &&
-      this.prevKey != 'ArrowUp' &&
-      e.code != this.prevKey
-    ) {
-      this.clientSnake.toggleDirection(e.code);
-    }
-    if (
-      e.code === 'ArrowRight' &&
-      this.prevKey != 'ArrowLeft' &&
-      e.code != this.prevKey
-    ) {
-      this.clientSnake.toggleDirection(e.code);
-    }
-    if (
-      e.code === 'ArrowLeft' &&
-      this.prevKey != 'ArrowRight' &&
-      e.code != this.prevKey
-    ) {
-      this.clientSnake.toggleDirection(e.code);
-    }
-
-    this.prevKey = e.code;
   }
 }
 
