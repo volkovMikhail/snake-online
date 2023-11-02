@@ -11,6 +11,6 @@ body {
 }
 
 canvas {
-  display: flex;
-  border: 1px rgb(100, 100, 100) solid;
+  border: 5px rgb(203, 213, 224) solid;
+  border-radius: 5px;
 }

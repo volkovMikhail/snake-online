@@ -4,4 +4,4 @@ import { SnakeGateway } from './snake.gateway';
 @Module({
   providers: [SnakeGateway]
 })
-export class SnakeGatewayModule {}
+export class SnakeModule {}
