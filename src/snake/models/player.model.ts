@@ -1,13 +1,18 @@
 import { Chunk } from './chunk.model';
+import { Snake } from './snake.model';
 
 export class Player {
-  constructor() {
+  constructor(startChunk: Chunk) {
+    this.startChunk = startChunk;
+
     this.hasNextMove = true;
 
-    this.snakeBody = [];
+    this.snake = new Snake();
   }
 
-  snakeBody: Chunk[];
+  startChunk: Chunk;
+
+  snake: Snake;
 
   hasNextMove: boolean;
 }
