@@ -4,20 +4,20 @@ export class Snake {
   constructor() {
     this.body = [];
 
-    this.direction = {
-      up: false,
-      down: false,
-      right: false,
-      left: false
-    };
+    // this.direction = {
+    //   up: false,
+    //   down: false,
+    //   right: false,
+    //   left: false
+    // };
   }
 
-  body: Chunk[];
+  public body: Chunk[];
 
-  direction: {
-    up: boolean;
-    down: boolean;
-    right: boolean;
-    left: boolean;
-  };
+  // direction: {
+  //   up: boolean;
+  //   down: boolean;
+  //   right: boolean;
+  //   left: boolean;
+  // };
 }

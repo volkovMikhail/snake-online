@@ -8,6 +8,8 @@ export class Player {
     this.hasNextMove = true;
 
     this.snake = new Snake();
+
+    this.snake.body = [startChunk];
   }
 
   startChunk: Chunk;

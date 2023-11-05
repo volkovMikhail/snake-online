@@ -1,10 +1,30 @@
-import { Chunk } from "./chunk.model";
-import { Player } from "./player.model";
+import { Chunk } from './chunk.model';
+import { Player } from './player.model';
 
 export class Game {
-  constructor(public chunkSize: number){}
+  constructor(
+    chunkSize: number,
+    cnvHeight: number,
+    cnvWidth: number,
+  ) {
+    this.cnvHeight = cnvHeight;
+    this.cnvWidth = cnvWidth;
 
-  fruit: Chunk;
+    this.chunkSize = chunkSize;
 
-  players: Map<string, Player>;
+    this.players = new Map<string, Player>();
+
+    this.updates = {}
+  }
+
+  public cnvHeight: number;
+  public cnvWidth: number;
+
+  public chunkSize: number;
+
+  public fruit: Chunk;
+
+  public players: Map<string, Player>;
+
+  public updates: Record<string, Chunk[]>;
 }

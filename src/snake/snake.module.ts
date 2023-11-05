@@ -3,6 +3,6 @@ import { SnakeGateway } from './snake.gateway';
 import { SnakeService } from './snake.service';
 
 @Module({
-  providers: [SnakeGateway, SnakeService]
+  providers: [SnakeService, SnakeGateway]
 })
 export class SnakeModule {}

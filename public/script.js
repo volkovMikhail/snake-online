@@ -1,17 +1,3 @@
-const protocol = window.location.protocol === 'http:' ? 'ws' : 'wss';
-
-const socket = io(`${protocol}://${window.location.host}/`);
-
-socket.on('connect', function () {
-  console.log('Connected');
-
-  socket.emit('message', { test: 'test' });
-});
-
-socket.on('message', (data) => {
-  console.log(data);
-});
-
 //config variables
 let snakeSize = 25;
 let snakeColor = 'olive';
@@ -189,33 +175,133 @@ class Snake {
         gameOverCallback();
       }
     }
+
+    socket.emit(PLAYER_MOVE, this.head);
+  }
+
+  moveUserFromSrv(update, gameOverCallback) {
+    this.body.splice(0, 1);
+
+    if (update?.length) {
+      const chunks = update.map(
+        (plainChunk) => new Chunk(plainChunk.x, plainChunk.y)
+      );
+
+      this.body.push(...chunks);
+    }
+
+    this.head = this.body[this.body.length - 1];
+
+    if (this.head) {
+      if (this.head.x >= canv.width) this.head.x = 0;
+      if (this.head.y >= canv.height) this.head.y = 0;
+      if (this.head.x < 0) this.head.x = canv.width;
+      if (this.head.y < 0) this.head.y = canv.height;
+
+      //game over user from srv
+      for (let i = 0; i < this.body.length - 2; i++) {
+        if (this.body[i].x === this.head.x && this.body[i].y === this.head.y) {
+          gameOverCallback();
+        }
+      }
+    }
   }
 }
+
+//constant event types
+const PLAYER_MOVE = 'PLAYER_MOVE';
+const NEXT_MOVE = 'NEXT_MOVE';
+const SNAKE_GROW = 'SNAKE_GROW';
+const GAME_INFO = 'GAME_INFO';
+const UPDATE = 'UPDATE';
+
+//socket logic
+const protocol = window.location.protocol === 'http:' ? 'ws' : 'wss';
+
+const socket = io(`${protocol}://${window.location.host}/`);
+
+socket.on('connect', function () {
+  console.log('Connected');
+});
+
+let startInfo;
+let clientStartInfo;
+
+socket.on(GAME_INFO, (data) => {
+  startInfo = data;
+  clientStartInfo = startInfo.playerSnakes[startInfo.id];
+
+  start();
+});
 
 function start() {
   const fruit = new Fruit(100, 100, fruitColor);
   fruit.draw();
 
-  const clientSnake = new Snake(25, 25, snakeColor);
+  const clientSnake = new Snake(
+    clientStartInfo.body[0].x,
+    clientStartInfo.body[0].y,
+    snakeColor
+  );
+
+  const srvUsers = new Map();
+
+  Object.keys(startInfo.playerSnakes).forEach((key) => {
+    if (key === startInfo.id) {
+      return;
+    }
+
+    const srvUserSnake = startInfo.playerSnakes[key].body;
+
+    const newSnake = new Snake(0, 0, snakeColor);
+
+    newSnake.body = srvUserSnake.map((chunk) => new Chunk(chunk.x, chunk.y));
+
+    srvUsers.set(key, newSnake);
+  });
 
   const controls = new Controls(clientSnake);
 
-  function main() {
+  function main(update) {
     clear();
 
+    Object.keys(update).forEach((id) => {
+      if (!srvUsers.get(id)) {
+        const newSnake = new Snake(0, 0, snakeColor);
+
+        newSnake.body = update[id].map(
+          (chunk) => new Chunk(chunk.x, chunk.y)
+        );
+
+        srvUsers.set(id, newSnake);
+      }
+    });
+
     fruit.draw();
-    clientSnake.move(()=> clientSnake.body = [new Chunk(25,25)]);
+    clientSnake.move(() => (clientSnake.body = [new Chunk(25, 25)]));
 
     if (clientSnake.head.x === fruit.x && clientSnake.head.y === fruit.y) {
       clientSnake.body.push(new Chunk(clientSnake.head.x, clientSnake.head.y));
 
       fruit.changePosition(randomX(), randomY());
+
+      socket.emit(SNAKE_GROW);
+    }
+
+    for (const entry of srvUsers.entries()) {
+      const [id, snake] = entry;
+
+      const currentUserSnakeUpdate = update[id];
+
+      snake.moveUserFromSrv(currentUserSnakeUpdate, () =>
+        console.log('GAME OVER')
+      );
+
+      snake.draw();
     }
 
     clientSnake.draw();
   }
 
-  setInterval(main, delay);
+  socket.on(NEXT_MOVE, (data) => main(data));
 }
-
-start();
